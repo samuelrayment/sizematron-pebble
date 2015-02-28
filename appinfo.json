@@ -1,0 +1,19 @@
+{
+  "uuid": "17dcb4c6-d2bd-4222-b111-d9f2838a6607",
+  "shortName": "Sizematron",
+  "longName": "Sizematron3000",
+  "companyName": "Bestriped",
+  "versionCode": 1,
+  "versionLabel": "1.0",
+  "sdkVersion": "3",
+  "targetPlatforms": ["aplite", "basalt"],
+  "watchapp": {
+    "watchface": false
+  },
+  "appKeys": {
+    "dummy": 0
+  },
+  "resources": {
+    "media": []
+  }
+}
