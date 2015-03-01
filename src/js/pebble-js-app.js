@@ -8,12 +8,26 @@ Pebble.addEventListener("ready",
 
 Pebble.addEventListener("appmessage",
 		function(e) {
+			console.log("type: " + e.payload[MSG_TYPE]);
 			switch (e.payload[MSG_TYPE]) {
 				case "ready":
 					sendSessionInfo();
+					break;
+				case "session_selected":
+					selectSession(e.payload['3']);
+					break;
 			}
 		}
 );
+
+function selectSession(sessionId) {
+	setTimeout(function() {
+		var message = {};
+		message['0'] = 'ticket_chosen';
+		message['1'] = 'x';
+		Pebble.sendAppMessage(message);
+	}, 3000);
+}
 
 function packSessionInfo(sessionInfo) {
 	var packed = {};

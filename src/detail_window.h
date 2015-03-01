@@ -6,5 +6,6 @@
 
 Window* detail_window_create(Session session);
 
+void detail_window_ticket_chosen(bool ticket_chosen);
 
 #endif /* DETAILWINDOW_H */

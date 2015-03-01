@@ -5,11 +5,14 @@
 #define MSG_TYPE 0
 #define SESSION_COUNT 1
 #define SESSION_NAMES 2
+#define SESSION_ID 3
 
 static Window *window;
 static Window *detail_window = NULL;
 // Sizing session menu for selecting a session
 static MenuLayer *main_menu;
+
+static void app_message_send_session_selected(int session_id);
 
 ////////////
 // MAIN MENU
@@ -53,6 +56,7 @@ static void main_menu_select_click(struct MenuLayer *menu_layer, MenuIndex *cell
 	Session session = menu_context->session_info->sessions[cell_index->row];
 	detail_window = detail_window_create(session);
   window_stack_push(detail_window, true);
+	app_message_send_session_selected(session.id); 
 }
 
 static void main_menu_draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *callback_context) { 
@@ -113,19 +117,10 @@ void main_menu_update_session_info(SessionInfo *session_info) {
 	free(menu_context->session_info);
 	menu_context->session_info = session_info;
 }
-static void window_load(Window *window) {
-	GRect frame;
 
-	frame = layer_get_bounds(window_get_root_layer(window));
-	main_menu = create_main_menu(frame);
-	menu_layer_set_click_config_onto_window(main_menu, window);
-	layer_add_child(window_get_root_layer(window), menu_layer_get_layer(main_menu));
-}
-
-static void window_unload(Window *window) {
- 	APP_LOG(APP_LOG_LEVEL_ERROR, "Unload");
-	free_main_menu();
-}
+//////////////
+// APP MESSAGE
+//////////////
 
 static SessionInfo* parseSessionInfo(DictionaryIterator *iter) {
 	SessionInfo *session_info;
@@ -157,10 +152,14 @@ static void app_message_inbox_received(DictionaryIterator *iter, void *context) 
   APP_LOG(APP_LOG_LEVEL_DEBUG, "INBOX RECEIVED");
 	Tuple *tuple = dict_read_first(iter);
  	APP_LOG(APP_LOG_LEVEL_DEBUG, "Message Type: %s", tuple->value->cstring);
-	SessionInfo *session_info = parseSessionInfo(iter);
+	if (strcmp(tuple->value->cstring, "session_info") == 0) {
+		SessionInfo *session_info = parseSessionInfo(iter);
 
-	main_menu_update_session_info(session_info);
-	menu_layer_reload_data(main_menu);
+		main_menu_update_session_info(session_info);
+		menu_layer_reload_data(main_menu);
+	} else if(strcmp(tuple->value->cstring, "ticket_chosen") == 0) {
+		detail_window_ticket_chosen(true);		
+	}
 }
 
 static void app_message_inbox_dropped(AppMessageResult reason, void *context) {
@@ -169,6 +168,18 @@ static void app_message_inbox_dropped(AppMessageResult reason, void *context) {
 
 static void app_message_outbox_sent(DictionaryIterator *iterator, void *context) {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "OUTBOX SENT");
+}
+
+static void app_message_send_session_selected(int session_id) {
+	DictionaryIterator *iter;
+	AppMessageResult result = app_message_outbox_begin(&iter);
+	if (result != APP_MSG_OK) {
+  	APP_LOG(APP_LOG_LEVEL_ERROR, "Cannot open outbox to send message");
+	} else {
+		dict_write_cstring(iter, MSG_TYPE, "session_selected");
+		dict_write_int(iter, SESSION_ID, &session_id, 4, false);
+		app_message_outbox_send();
+	}
 }
 
 static char* app_message_result_string(AppMessageResult reason) {
@@ -210,6 +221,24 @@ static void init_app_message() {
 		dict_write_cstring(iter, MSG_TYPE, "ready");
 		app_message_outbox_send();
 	}
+}
+
+/////////
+// WINDOW
+/////////
+
+static void window_load(Window *window) {
+	GRect frame;
+
+	frame = layer_get_bounds(window_get_root_layer(window));
+	main_menu = create_main_menu(frame);
+	menu_layer_set_click_config_onto_window(main_menu, window);
+	layer_add_child(window_get_root_layer(window), menu_layer_get_layer(main_menu));
+}
+
+static void window_unload(Window *window) {
+ 	APP_LOG(APP_LOG_LEVEL_ERROR, "Unload");
+	free_main_menu();
 }
 
 static void init(void) {
