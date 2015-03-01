@@ -2,13 +2,21 @@
 
 static const uint16_t MENU_ITEM_PADDING = 5;
 
+// Struct for holding menu context data
+typedef struct {
+	SessionInfo *session_info;
+} MenuContext;
+
+static MenuContext *menu_context;
+
 static uint16_t main_menu_get_num_sections(struct MenuLayer *main_menu, void *callback_context) { 
 	// we only have 1 section as we don't have section headers.
 	return 1;
 }
 
 static uint16_t main_menu_get_num_rows_in_section(struct MenuLayer *main_menu, uint16_t section_index, void *callback_context) { 
-	return 10;
+	MenuContext *menu_context = (MenuContext*) callback_context;
+	return menu_context->session_info->length;
 }
 
 static int16_t main_menu_get_cell_height(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) { 
@@ -28,9 +36,10 @@ static void main_menu_select_click(struct MenuLayer *menu_layer, MenuIndex *cell
 }
 
 static void main_menu_draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *callback_context) { 
+	MenuContext *menu_context = (MenuContext*) callback_context;
+
 	graphics_context_set_text_color(ctx, GColorBlack);
-	char item_label[15];
-	snprintf(item_label, 15, "Item %d", cell_index->row);
+	char *item_label = menu_context->session_info->sessions[cell_index->row].name;
 	graphics_draw_text(ctx, item_label, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD), 
 			GRect(MENU_ITEM_PADDING, MENU_ITEM_PADDING, 
 					  layer_get_frame(cell_layer).size.w - 2 * MENU_ITEM_PADDING, 
@@ -59,10 +68,28 @@ static MenuLayerCallbacks main_menu_callbacks() {
 	});
 }
 
+// Create and return a main menu the size of frame
 MenuLayer* create_main_menu(GRect frame) {
 	MenuLayer *main_menu = menu_layer_create(GRect(0, 0, frame.size.w, frame.size.h));
 	
+	menu_context = malloc(sizeof(MenuContext));
+	menu_context->session_info = new_session_info(0);
 	MenuLayerCallbacks menu_callbacks = main_menu_callbacks();
-	menu_layer_set_callbacks(main_menu, NULL, menu_callbacks);
+	menu_layer_set_callbacks(main_menu, (void*)menu_context, menu_callbacks);
 	return main_menu;
+}
+
+// free the main menu
+void free_main_menu() {
+	free_session_info(menu_context->session_info);
+	free(menu_context);
+}
+
+// Update the main menu with the new session info, the main menu
+// now owns the session info, so it should not be freed by the 
+// caller.
+void main_menu_update_session_info(SessionInfo *session_info) {
+	// we always have a session info object
+	free(menu_context->session_info);
+	menu_context->session_info = session_info;
 }
