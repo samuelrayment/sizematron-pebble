@@ -122,6 +122,17 @@ void main_menu_update_session_info(SessionInfo *session_info) {
 // APP MESSAGE
 //////////////
 
+static void send_ready_message() {
+	DictionaryIterator *iter;
+	AppMessageResult result = app_message_outbox_begin(&iter);
+	if (result != APP_MSG_OK) {
+  	APP_LOG(APP_LOG_LEVEL_ERROR, "Cannot open outbox to send message");
+	} else {
+		dict_write_cstring(iter, MSG_TYPE, "ready");
+		app_message_outbox_send();
+	}
+}
+
 static SessionInfo* parseSessionInfo(DictionaryIterator *iter) {
 	SessionInfo *session_info;
 
@@ -152,7 +163,9 @@ static void app_message_inbox_received(DictionaryIterator *iter, void *context) 
   APP_LOG(APP_LOG_LEVEL_DEBUG, "INBOX RECEIVED");
 	Tuple *tuple = dict_read_first(iter);
  	APP_LOG(APP_LOG_LEVEL_DEBUG, "Message Type: %s", tuple->value->cstring);
-	if (strcmp(tuple->value->cstring, "session_info") == 0) {
+	if (strcmp(tuple->value->cstring, "ready") == 0 ) {
+		send_ready_message();
+	} else if (strcmp(tuple->value->cstring, "session_info") == 0) {
 		SessionInfo *session_info = parseSessionInfo(iter);
 
 		main_menu_update_session_info(session_info);
@@ -212,15 +225,6 @@ static void init_app_message() {
 	app_message_register_outbox_sent(&app_message_outbox_sent);
 	app_message_register_outbox_failed(&app_message_outbox_failed);
 	app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
-	
-	DictionaryIterator *iter;
-	AppMessageResult result = app_message_outbox_begin(&iter);
-	if (result != APP_MSG_OK) {
-  	APP_LOG(APP_LOG_LEVEL_ERROR, "Cannot open outbox to send message");
-	} else {
-		dict_write_cstring(iter, MSG_TYPE, "ready");
-		app_message_outbox_send();
-	}
 }
 
 /////////

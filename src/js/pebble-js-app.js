@@ -2,7 +2,10 @@ var MSG_TYPE = 0;
 
 Pebble.addEventListener("ready",
     function(e) {
-        console.log("Hello world! - Sent from your javascript application.");
+      console.log("Hello world! - Sent from your javascript application.");
+			var message = {};
+			message['0'] = 'ready';
+			Pebble.sendAppMessage(message);
     }
 );
 
