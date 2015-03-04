@@ -13,6 +13,18 @@ typedef struct {
 
 static void sizes_layer_update_proc(struct Layer *layer, GContext *ctx);
 
+#ifdef PBL_PLATFORM_BASALT
+#define BACKGROUND_COLOUR GColorIslamicGreen
+#define SELECTED_BACKGROUND_COLOUR GColorIcterine
+#define TEXT_COLOUR GColorWhite
+#define SELECTED_TEXT_COLOUR GColorIslamicGreen
+#else
+#define BACKGROUND_COLOUR GColorWhite
+#define SELECTED_BACKGROUND_COLOUR GColorBlack
+#define TEXT_COLOUR GColorBlack
+#define SELECTED_TEXT_COLOUR GColorWhite
+#endif
+
 SizesLayer *sizes_layer_create(GRect frame) {
 	Layer *layer = layer_create_with_data(frame, sizeof(SizesLayerData));
 	layer_set_update_proc(layer, &sizes_layer_update_proc);
@@ -37,7 +49,7 @@ static void sizes_layer_update_proc(struct Layer *layer, GContext *ctx) {
 	SizesLayerData *data = (SizesLayerData*)layer_get_data(layer);
 
 	GRect frame = layer_get_frame(layer);
-	graphics_context_set_fill_color(ctx, GColorWhite);
+	graphics_context_set_fill_color(ctx, BACKGROUND_COLOUR);
 	graphics_fill_rect(ctx, frame, 0, GCornerNone);
 	for (int i=0; i<FIB_SIZES_COUNT; i++) {
 		int column = i % 3;
@@ -48,11 +60,11 @@ static void sizes_layer_update_proc(struct Layer *layer, GContext *ctx) {
 				SIZING_LETTER_SIZE, SIZING_LETTER_SIZE
 		);
 		if (data->selected_index == i) {
-			graphics_context_set_text_color(ctx, GColorWhite);
-			graphics_context_set_fill_color(ctx, GColorBlack);
+			graphics_context_set_text_color(ctx, SELECTED_TEXT_COLOUR);
+			graphics_context_set_fill_color(ctx, SELECTED_BACKGROUND_COLOUR);
 			graphics_fill_rect(ctx, letter_frame, 0, GCornerNone);
 		} else {
-			graphics_context_set_text_color(ctx, GColorBlack);
+			graphics_context_set_text_color(ctx, TEXT_COLOUR);
 		}
 		graphics_draw_text(ctx, fib_sizes[i], 
 			fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD), letter_frame,
