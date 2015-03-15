@@ -13,7 +13,7 @@ Pebble.addEventListener("appmessage",
 			for (var i in e.payload) {
 				console.log(i + ': ' + e.payload[i]);
 			}
-			console.log("type: " + e.payload['type']);
+			console.log("JS Layer: received message of type: " + e.payload['type']);
 			switch (e.payload['type']) {
 				case "ready":
 					sendSessionInfo();

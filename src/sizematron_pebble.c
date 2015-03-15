@@ -154,7 +154,7 @@ static SessionInfo* parseSessionInfo(DictionaryIterator *iter) {
 			if (key % 2 == 0) {
 				session_info->sessions[index].id = tuple->value->uint32;
 			} else {
-				strncpy(session_info->sessions[index].name, tuple->value->cstring, 20);
+				strncpy(session_info->sessions[index].name, tuple->value->cstring, SESSION_INFO_NAME_MAX_LENGTH);
 			}
 		}
 		tuple = dict_read_next(iter);

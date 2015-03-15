@@ -1,8 +1,10 @@
 #ifndef SESSIONINFO_H
 #define SESSIONINFO_H
 
+#define SESSION_INFO_NAME_MAX_LENGTH 20
+
 typedef struct {
-  char name[20];
+  char name[SESSION_INFO_NAME_MAX_LENGTH];
   int id;
 } Session;
 
