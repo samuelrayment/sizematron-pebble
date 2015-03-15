@@ -11,7 +11,11 @@
     "watchface": false
   },
   "appKeys": {
-    "dummy": 0
+    "type": 0,
+		"session-count": 1,
+		"session-names": 2,
+		"session-id": 3,
+		"ticket-id": 4
   },
   "resources": {
     "media": []

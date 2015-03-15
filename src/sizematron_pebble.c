@@ -50,10 +50,11 @@ static int16_t main_menu_get_separator_height(struct MenuLayer *menu_layer, Menu
 }
 
 static void main_menu_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) { 
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Selected item: %d", cell_index->row);
 	MenuContext *menu_context = (MenuContext*) callback_context;
 
 	Session session = menu_context->session_info->sessions[cell_index->row];
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "Selected Session: %d", session.id);
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "Selected Session Name: %s", session.name);
 	detail_window = detail_window_create(session);
   window_stack_push(detail_window, true);
 	app_message_send_session_selected(session.id); 
@@ -135,24 +136,26 @@ static void send_ready_message() {
 
 static SessionInfo* parseSessionInfo(DictionaryIterator *iter) {
 	SessionInfo *session_info;
-
-	Tuple *tuple = dict_read_next(iter);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Session Count: %lu", tuple->value->uint32);
+	
+	Tuple *tuple = dict_find(iter, SESSION_COUNT);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Number of Sessions: %lu", tuple->value->uint32);
 	int info_size = tuple->value->uint32;
 	session_info = new_session_info(info_size);
-	tuple = dict_read_next(iter);
+	tuple = dict_read_first(iter);
 	while (tuple) {
 		// account for the type and count keys
 		int key = tuple->key - 2; 
-		int index = key / 2;
-		if (index > info_size) {
-			free(session_info);
-			return NULL;
-		}
-		if (key % 2 == 0) {
-			session_info->sessions[index].id = tuple->value->uint32;
-		} else {
-			strncpy(session_info->sessions[index].name, tuple->value->cstring, 20);
+		if (key >= 0) {
+			int index = key / 2;
+			if (index > info_size) {
+				free(session_info);
+				return NULL;
+			}
+			if (key % 2 == 0) {
+				session_info->sessions[index].id = tuple->value->uint32;
+			} else {
+				strncpy(session_info->sessions[index].name, tuple->value->cstring, 20);
+			}
 		}
 		tuple = dict_read_next(iter);
 	}
@@ -161,8 +164,8 @@ static SessionInfo* parseSessionInfo(DictionaryIterator *iter) {
 
 static void app_message_inbox_received(DictionaryIterator *iter, void *context) {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "INBOX RECEIVED");
-	Tuple *tuple = dict_read_first(iter);
- 	APP_LOG(APP_LOG_LEVEL_DEBUG, "Message Type: %s", tuple->value->cstring);
+	Tuple *tuple = dict_find(iter, MSG_TYPE);
+ 	APP_LOG(APP_LOG_LEVEL_DEBUG, "Watch: received message of type: %s", tuple->value->cstring);
 	if (strcmp(tuple->value->cstring, "ready") == 0 ) {
 		send_ready_message();
 	} else if (strcmp(tuple->value->cstring, "session_info") == 0) {

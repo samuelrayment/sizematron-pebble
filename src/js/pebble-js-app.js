@@ -1,23 +1,25 @@
-var MSG_TYPE = 0;
-
 Pebble.addEventListener("ready",
     function(e) {
       console.log("Hello world! - Sent from your javascript application.");
 			var message = {};
-			message['0'] = 'ready';
+			message['type'] = 'ready';
 			Pebble.sendAppMessage(message);
     }
 );
 
 Pebble.addEventListener("appmessage",
 		function(e) {
-			console.log("type: " + e.payload[MSG_TYPE]);
-			switch (e.payload[MSG_TYPE]) {
+			console.log('-----------');
+			for (var i in e.payload) {
+				console.log(i + ': ' + e.payload[i]);
+			}
+			console.log("type: " + e.payload['type']);
+			switch (e.payload['type']) {
 				case "ready":
 					sendSessionInfo();
 					break;
 				case "session_selected":
-					selectSession(e.payload['3']);
+					selectSession(e.payload['session-id']);
 					break;
 			}
 		}
@@ -26,8 +28,8 @@ Pebble.addEventListener("appmessage",
 function selectSession(sessionId) {
 	setTimeout(function() {
 		var message = {};
-		message['0'] = 'ticket_chosen';
-		message['1'] = 'x';
+		message['type'] = 'ticket_chosen';
+		message['ticket-id'] = 'IOS-123';
 		Pebble.sendAppMessage(message);
 	}, 3000);
 }
@@ -53,8 +55,8 @@ function sendSessionInfo() {
 		{id: 2, name: "Third"},
 	];
 	packedSessionInfo = packSessionInfo(sessionInfo);
-	packedSessionInfo['0'] = 'session_info';
-	packedSessionInfo['1'] = 3;
+	packedSessionInfo['type'] = 'session_info';
+	packedSessionInfo['session-count'] = 3;
 	console.log(packedSessionInfo[2]);
 	Pebble.sendAppMessage(packedSessionInfo);
 }

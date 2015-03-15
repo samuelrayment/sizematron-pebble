@@ -106,6 +106,9 @@ static void window_unload(Window *window) {
 
 Window* detail_window_create(Session session) {
 	context = malloc(sizeof(DetailWindowContext));
+	if (context == NULL) {
+		APP_LOG(APP_LOG_LEVEL_ERROR, "Cannot create detail window context, not enough memory.");
+	}
 	context->session = session;
 	context->ticket_chosen = false;
 	
